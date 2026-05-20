@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    name: Node boot + smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Boot server and run smoke test
+        run: |
+          set -euo pipefail
+          node server.js &
+          PID=$!
+          trap "kill $PID 2>/dev/null || true" EXIT
+          bash scripts/smoke.sh
+
+  docker:
+    name: Docker build + smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: crawlground:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run container and smoke test
+        run: |
+          set -euo pipefail
+          docker run -d --rm --name ctr -p 3456:3456 crawlground:ci
+          trap "docker stop ctr 2>/dev/null || true" EXIT
+          bash scripts/smoke.sh

@@ -1,0 +1,4 @@
+node_modules/
+data/scores.json
+.DS_Store
+*.log
