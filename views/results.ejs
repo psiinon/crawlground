@@ -1,0 +1,41 @@
+<%- include('_header', { title: 'Results' }) %>
+<h2>Results</h2>
+<%
+  const allTests = Object.values(registry.byId);
+  const scoredCount = allTests.filter(function(t) { return store.isScored(t.id); }).length;
+  const total = allTests.length;
+  const pct = total ? Math.round((scoredCount / total) * 100) : 0;
+%>
+<p class="summary">
+  <strong><%= scoredCount %> / <%= total %></strong> controls reached
+  (<%= pct %>%)
+</p>
+<table class="results">
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Test</th>
+      <th>Scored</th>
+      <th>First hit</th>
+      <th>Hits</th>
+    </tr>
+  </thead>
+  <tbody>
+  <% registry.categories.forEach(function(c) { %>
+    <% registry.byCategory[c.name].forEach(function(t) { %>
+      <tr class="<%= store.isScored(t.id) ? 'scored' : 'unscored' %>">
+        <td><%= t.category %></td>
+        <td><a href="/test/<%= t.category %>/<%= t.localId %>"><%= t.name %></a></td>
+        <td><%= store.isScored(t.id) ? '✓' : '·' %></td>
+        <td><%= store.firstHit(t.id) || '—' %></td>
+        <td><%= store.hits(t.id) || '—' %></td>
+      </tr>
+    <% }) %>
+  <% }) %>
+  </tbody>
+</table>
+<p>
+  <a href="/results.json">JSON export</a> &middot;
+  <a href="/reset">Reset all scores</a>
+</p>
+<%- include('_footer') %>

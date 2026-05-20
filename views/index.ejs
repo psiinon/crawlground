@@ -1,0 +1,16 @@
+<%- include('_header', { title: 'Crawlground' }) %>
+<h2>Test categories</h2>
+<p class="lede">
+  Each category contains a set of pages, each with a single control. A crawler
+  scores a test by reaching the hidden marker URL behind that control.
+</p>
+<ul class="category-list">
+<% categories.forEach(function(c) { %>
+  <li>
+    <a href="/category/<%= c.name %>"><%= c.name %></a>
+    <small><%= c.count %> tests</small>
+  </li>
+<% }) %>
+</ul>
+<p><a href="/results">View results &rarr;</a></p>
+<%- include('_footer') %>

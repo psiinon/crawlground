@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title><%= locals.title || 'Crawlground' %></title>
+  <link rel="stylesheet" href="/style.css">
+  <%- locals.extraHead || '' %>
+</head>
+<body>
+  <header class="site-header">
+    <h1><a href="/">Crawlground</a></h1>
+    <nav class="site-nav">
+      <a href="/">Categories</a>
+      <a href="/results">Results</a>
+      <a href="/reset">Reset</a>
+    </nav>
+  </header>
+  <main>

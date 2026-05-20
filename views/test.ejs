@@ -1,0 +1,12 @@
+<%- include('_header', { title: test.name, extraHead: head }) %>
+<nav class="breadcrumb">
+  <a href="/">Categories</a> &rsaquo;
+  <a href="/category/<%= test.category %>"><%= test.category %></a> &rsaquo;
+  <%= test.name %>
+</nav>
+<h2><%= test.name %></h2>
+<p class="desc"><%= test.description %></p>
+<div class="control-area">
+  <%- content %>
+</div>
+<%- include('_footer') %>

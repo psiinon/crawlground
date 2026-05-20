@@ -1,0 +1,13 @@
+services:
+  crawlground:
+    build: .
+    image: crawlground
+    container_name: crawlground
+    ports:
+      - "3456:3456"
+    volumes:
+      - scores:/app/data
+    restart: unless-stopped
+
+volumes:
+  scores:

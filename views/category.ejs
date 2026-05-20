@@ -1,0 +1,15 @@
+<%- include('_header', { title: category }) %>
+<nav class="breadcrumb"><a href="/">Categories</a> &rsaquo; <%= category %></nav>
+<h2><%= category %></h2>
+<ul class="test-list">
+<% tests.forEach(function(t) { %>
+  <li>
+    <span class="status <%= store.isScored(t.id) ? 'scored' : 'unscored' %>">
+      <%= store.isScored(t.id) ? '✓' : '·' %>
+    </span>
+    <a href="/test/<%= t.category %>/<%= t.localId %>"><%= t.name %></a>
+    <p class="desc"><%= t.description %></p>
+  </li>
+<% }) %>
+</ul>
+<%- include('_footer') %>

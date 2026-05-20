@@ -1,0 +1,14 @@
+<%- include('_header', { title: scored ? 'Scored' : 'Not scored' }) %>
+<h2 class="score-headline <%= scored ? 'scored' : 'unscored' %>">
+  <%= scored ? '✓ Scored' : '✗ Not scored' %>
+</h2>
+<dl class="score-meta">
+  <dt>Test</dt><dd><%= test.name %></dd>
+  <dt>ID</dt><dd><code><%= test.id %></code></dd>
+  <% if (!scored && reason) { %><dt>Reason</dt><dd><%= reason %></dd><% } %>
+</dl>
+<p>
+  <a href="/category/<%= test.category %>">Back to <%= test.category %></a> &middot;
+  <a href="/results">All results</a>
+</p>
+<%- include('_footer') %>
