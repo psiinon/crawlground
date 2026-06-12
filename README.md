@@ -46,6 +46,96 @@ The marker URL is not linked from anywhere else in the app. The only way to reac
 
 Hits are recorded globally and persisted to `data/scores.json`. To start a fresh run, visit `/reset` (confirmation page) or `POST /reset`.
 
+## Scoring multiple tools in one session
+
+You can run several crawlers back-to-back and get a single combined report. Before each crawler run, POST to `/set-tool` to name the active tool and clear its previous scores:
+
+```sh
+# Before running ZAP Traditional Spider:
+curl -s -X POST http://localhost:3456/set-tool \
+     -H 'Content-Type: application/json' \
+     -d '{"name": "ZAP Traditional Spider"}'
+
+# ... run the crawler ...
+
+# Before running ZAP AJAX Spider:
+curl -s -X POST http://localhost:3456/set-tool \
+     -H 'Content-Type: application/json' \
+     -d '{"name": "ZAP AJAX Spider"}'
+
+# ... run the crawler ...
+
+# Fetch the combined report:
+curl -s http://localhost:3456/results.json
+# or
+curl -s http://localhost:3456/results.yaml
+# or in ZAP website format (see below):
+curl -s http://localhost:3456/website-results.yaml
+```
+
+Each call to `/set-tool` resets the scores for that tool name and makes it the active tool. Scores from previously named tools are kept, so the final report covers all of them.
+
+Before starting a multi-tool session, reset any leftover scores from previous runs:
+
+```sh
+curl -X POST http://localhost:3456/reset
+```
+
+When using Docker, the named volume persists `scores.json` across container restarts and rebuilds. If you want a completely clean slate, remove the volume:
+
+```sh
+docker volume rm crawlground-scores
+```
+
+The `/set-tool` endpoint is intentionally not linked anywhere in the site HTML so that crawlers do not visit it as part of their crawling.
+
+## ZAP website report format
+
+`/website-results.yaml` produces output in the same format used by the [ZAP website](https://www.zaproxy.org/) to publish crawler benchmark results. Name your tools to match the column names you want in the output — `standard`, `ajax`, and `client` reproduce the standard ZAP website layout:
+
+```sh
+curl -s -X POST http://localhost:3456/set-tool -H 'Content-Type: application/json' -d '{"name":"standard"}'
+# ... run ZAP Traditional Spider ...
+
+curl -s -X POST http://localhost:3456/set-tool -H 'Content-Type: application/json' -d '{"name":"ajax"}'
+# ... run ZAP AJAX Spider ...
+
+curl -s -X POST http://localhost:3456/set-tool -H 'Content-Type: application/json' -d '{"name":"client"}'
+# ... run ZAP Client Spider ...
+
+curl -s http://localhost:3456/website-results.yaml
+```
+
+Example output:
+
+```yaml
+section: Crawlground
+target: localhost:3456
+details:
+  - path: /score/forms/01-get-form
+    scheme: http
+    standard: Pass
+    ajax: FAIL
+    client: Pass
+  - path: /score/links/01-anchor-href
+    scheme: http
+    standard: Pass
+    ajax: Pass
+    client: FAIL
+  # ...
+tests: 10
+passes: 4
+standardPasses: 3
+ajaxPasses: 2
+clientPasses: 1
+fails: 6
+score: 40%
+```
+
+Tool names are converted to camelCase keys, so `"AJAX Spider"` becomes `ajaxSpider` and `ajaxSpiderPasses`. Tools with zero scores are omitted from the output.
+
+The `target` field is taken from the HTTP `Host` header of the request, so it automatically reflects the hostname and port ZAP connected to. Override it with the `CRAWLGROUND_TARGET` env var. Override `section` with `CRAWLGROUND_SECTION`.
+
 ## Adding a test
 
 Drop a file in `tests/<category>/`. The directory becomes the category, the filename (without `.js`) becomes the test ID. That's the entire registration step — the registry picks it up at startup and mounts the routes automatically.
@@ -96,10 +186,13 @@ Just create a new directory under `tests/`. The registry treats every directory 
 | `/category/:cat` | GET | Tests in a category, with scored/unscored badges |
 | `/test/:cat/:id` | GET | The test page (the only page a crawler should care about) |
 | `/score/:cat/:id` | GET, POST | Hidden marker — records a hit |
-| `/results` | GET | Scoreboard |
-| `/results.json` | GET | Same data in JSON, for CI/automation |
+| `/results` | GET | Scoreboard (current tool) |
+| `/results.json` | GET | Combined multi-tool report in JSON |
+| `/results.yaml` | GET | Combined multi-tool report in YAML |
+| `/website-results.yaml` | GET | Results in ZAP website format (see below) |
+| `/set-tool` | POST | Set the active tool name and reset its scores — not linked in the UI |
 | `/reset` | GET | Confirmation page |
-| `/reset` | POST | Wipes all scores |
+| `/reset` | POST | Wipes all scores for all tools |
 
 ## Maintenance
 

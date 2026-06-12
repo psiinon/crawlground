@@ -1,8 +1,10 @@
 <%- include('_header', { title: 'Reset scores' }) %>
 <h2>Reset scores?</h2>
-<p>This wipes <strong>all</strong> recorded scores. There is no undo.</p>
+<p>This wipes <strong>all</strong> recorded scores for all tools. There is no undo.</p>
 <form method="POST" action="/reset">
-  <button type="submit" class="danger">Yes, reset all scores</button>
+  <label for="confirm">Type <strong>RESET</strong> to confirm:</label>
+  <input type="text" id="confirm" name="confirm" autocomplete="off">
+  <button type="submit" class="danger">Reset all scores</button>
 </form>
 <p><a href="/">Cancel</a></p>
 <%- include('_footer') %>

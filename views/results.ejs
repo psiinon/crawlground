@@ -7,6 +7,7 @@
   const pct = total ? Math.round((scoredCount / total) * 100) : 0;
 %>
 <p class="summary">
+  Tool: <strong><%= store.currentTool %></strong> &mdash;
   <strong><%= scoredCount %> / <%= total %></strong> controls reached
   (<%= pct %>%)
 </p>
@@ -36,6 +37,7 @@
 </table>
 <p>
   <a href="/results.json">JSON export</a> &middot;
+  <a href="/results.yaml">YAML export</a> &middot;
   <a href="/reset">Reset all scores</a>
 </p>
 <%- include('_footer') %>
