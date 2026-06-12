@@ -1,6 +1,8 @@
+const http = require('http');
 const express = require('express');
 const path = require('path');
 const yaml = require('js-yaml');
+const { WebSocketServer } = require('ws');
 const { loadRegistry } = require('./lib/registry');
 const { store } = require('./lib/store');
 
@@ -70,6 +72,18 @@ app.post('/set-tool', (req, res) => {
 app.get('/api/reveal', (req, res) => {
   const url = req.query.url || '';
   res.json({ url });
+});
+
+// Used by dynamic-content/05-sse-injected: pushes the score URL as a single SSE event.
+app.get('/api/sse-reveal', (req, res) => {
+  const url = req.query.url || '';
+  res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
+  res.flushHeaders();
+  const timer = setTimeout(() => {
+    res.write(`data: ${JSON.stringify({ url })}\n\n`);
+    res.end();
+  }, 250);
+  req.on('close', () => clearTimeout(timer));
 });
 
 app.get('/results', (req, res) => {
@@ -155,7 +169,29 @@ app.post('/reset', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3456;
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+// Used by dynamic-content/06-websocket-injected: accepts a WS connection,
+// then pushes the score URL (passed as ?url=) back as a single message.
+const wss = new WebSocketServer({ noServer: true });
+server.on('upgrade', (req, socket, head) => {
+  const pathname = new URL(req.url, 'http://localhost').pathname;
+  if (pathname === '/api/ws-reveal') {
+    wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
+  } else {
+    socket.destroy();
+  }
+});
+wss.on('connection', (ws, req) => {
+  const url = new URL(req.url, 'http://localhost').searchParams.get('url') || '';
+  const timer = setTimeout(() => {
+    ws.send(JSON.stringify({ url }));
+    ws.close();
+  }, 250);
+  ws.on('close', () => clearTimeout(timer));
+});
+
+server.listen(PORT, () => {
   console.log(`Crawlground listening on http://localhost:${PORT}`);
   console.log(`Loaded ${Object.keys(registry.byId).length} tests across ${registry.categories.length} categories.`);
 });
