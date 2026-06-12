@@ -65,6 +65,13 @@ app.post('/set-tool', (req, res) => {
   res.json({ ok: true, tool: store.currentTool });
 });
 
+// Used by the fetch-injected dynamic-content test: echoes back a known score URL
+// so the link is only discoverable after a network round-trip.
+app.get('/api/reveal', (req, res) => {
+  const url = req.query.url || '';
+  res.json({ url });
+});
+
 app.get('/results', (req, res) => {
   res.render('results', { registry, store });
 });
