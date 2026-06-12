@@ -25,7 +25,7 @@ curl -fsS "$BASE/test/buttons/01-html-button" > /dev/null
 curl -fsS "$BASE/results" > /dev/null
 
 echo "Resetting state..."
-curl -fsS -X POST "$BASE/reset" > /dev/null
+curl -fsS -X POST -d "confirm=RESET" "$BASE/reset" > /dev/null
 
 TOTAL=$(curl -fsS "$BASE/results.json" | jq -r '.summary.total')
 if [ "$TOTAL" -lt 10 ]; then
@@ -49,7 +49,7 @@ fi
 echo "  2/2 expected markers scored"
 
 echo "Reset clears state..."
-curl -fsS -X POST "$BASE/reset" > /dev/null
+curl -fsS -X POST -d "confirm=RESET" "$BASE/reset" > /dev/null
 SCORED=$(curl -fsS "$BASE/results.json" | jq -r '.summary.scored')
 if [ "$SCORED" != "0" ]; then
   echo "FAIL: expected 0 scored after reset, got $SCORED"

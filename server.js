@@ -36,6 +36,9 @@ app.get('/test/:cat/:id', (req, res) => {
     content = rendered.html || '';
     head = rendered.head || '';
   }
+  if (!head && test.head) {
+    head = typeof test.head === 'function' ? test.head(ctx) : test.head;
+  }
   res.render('test', { test, content, head });
 });
 
@@ -81,7 +84,8 @@ function buildReport(registry, store) {
     const scored = tests.filter((t) => t.tools[name].scored).length;
     return { name, scored, scoredPercent: total ? Math.round((scored / total) * 100) : 0 };
   });
-  return { summary: { total, tools }, tests };
+  const scored = tests.filter((t) => toolEntries.some(({ name }) => t.tools[name].scored)).length;
+  return { summary: { total, scored, tools }, tests };
 }
 
 app.get('/results.json', (req, res) => {
